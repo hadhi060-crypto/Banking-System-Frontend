@@ -3,128 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ABC Bank - Smart AI Core</title>
+    <title>ABC Bank - Secure AI Digital Core</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <header>
-        <div>
-            <h1>ABC Bank</h1>
-            <small>Smart Banking & Fraud Prevention System</small>
-        </div>
-        <div class="user-info">
-            <p><strong>Branch:</strong> Main Branch (BR-101)</p>
-            <p><strong>Session ID:</strong> AD2026</p>
-        </div>
-    </header>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>ABC Bank</h2>
+                <p>Digital Core & Fraud Prevention Portal</p>
+            </div>
 
-    <div class="container">
-
-        <!-- 11-DIGIT ACCOUNT FORM -->
-        <div class="card">
-            <h2>Perform Transfer <span class="badge">Strict Validation</span></h2>
-            <form id="transferForm">
+            <form id="loginForm">
                 <div class="form-group">
-                    <label for="accNum">11-Digit Target Account Number</label>
-                    <input type="text" id="accNum" maxlength="11" placeholder="e.g., 10023456789" required>
-                    <span class="error-msg" id="accError">Must be exactly 11 numeric digits.</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="transAmount">Amount ($)</label>
-                    <input type="number" id="transAmount" placeholder="Enter amount" min="1" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="transType">Transaction Type</label>
-                    <select id="transType">
-                        <option value="Debit">Debit / Transfer</option>
-                        <option value="Credit">Credit / Deposit</option>
+                    <label for="loginRole">Select Access Role</label>
+                    <select id="loginRole" onchange="toggleRoleFields()">
+                        <option value="Customer">Customer Portal</option>
+                        <option value="Admin">System Administrator</option>
                     </select>
                 </div>
 
-                <button type="submit">Submit Transaction</button>
-            </form>
-        </div>
-
-        <!-- AI FRAUD DETECTION ENGINE -->
-        <div class="card">
-            <h2>AI Fraud Engine <span class="badge">Real-Time</span></h2>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">
-                Monitors behavioral velocity, high value risk, and account anomalies.
-            </p>
-            
-            <div id="fraudAlert" class="ai-box">
-                <strong>Status:</strong> Engine Active. Awaiting new transaction...
-            </div>
-
-            <div style="margin-top: 1rem;">
-                <label>Current Calculated Risk Score:</label>
-                <div class="meter-bar">
-                    <div id="riskMeter" class="meter-fill" style="background-color: var(--accent-color);"></div>
+                <div class="form-group">
+                    <label for="loginAccount" id="accountLabel">11-Digit Account Number</label>
+                    <input type="text" id="loginAccount" placeholder="e.g. 10023456789" required>
+                    <span class="error-msg" id="loginAccError">Enter a valid 11-digit account number.</span>
                 </div>
-                <small id="riskScoreText">Score: 0 / 100 (Safe)</small>
+
+                <div class="form-group">
+                    <label for="loginPin">4-Digit PIN / Password</label>
+                    <input type="password" id="loginPin" placeholder="••••" required>
+                    <span class="error-msg" id="loginPinError">PIN must be 4 digits.</span>
+                </div>
+
+                <div id="loginAlert" class="alert alert-danger" style="display:none;"></div>
+
+                <button type="submit" class="btn-primary">Authenticate & Log In</button>
+            </form>
+
+            <div class="auth-footer">
+                <small><strong>Demo Admin Login:</strong> ID: <code>AD2026</code> | PIN: <code>AD2026</code></small>
             </div>
         </div>
+    </div>
 
-        <!-- INNOVATIVE FEATURE 1: GOAL ENGINE -->
-        <div class="card">
-            <h2>Intelligent Goal Engine <span class="badge">AI Feature</span></h2>
-            <div class="form-group">
-                <label for="goalName">Savings Goal</label>
-                <input type="text" id="goalName" placeholder="e.g., Emergency Fund">
+    <!-- MAIN APP DASHBOARD (HIDDEN UNTIL AUTHENTICATED) -->
+    <div id="appScreen" class="app-wrapper" style="display: none;">
+        <header>
+            <div class="brand">
+                <h1>ABC Bank</h1>
+                <small>Smart AI Core System</small>
             </div>
-            <div class="form-group" style="margin-top: 0.5rem;">
-                <label for="goalTarget">Target Amount ($)</label>
-                <input type="number" id="goalTarget" placeholder="5000">
+            <div class="user-info">
+                <p><strong id="userDisplayName">User</strong> (<span id="userRoleBadge">Customer</span>)</p>
+                <p><small>Branch: <strong>Main Branch (BR-101)</strong></small></p>
+                <button class="btn-logout" onclick="logout()">Log Out</button>
             </div>
-            <button style="margin-top: 0.5rem;" onclick="calculateGoal()">Generate AI Plan</button>
-            
-            <div id="goalResult" class="ai-box" style="display: none; margin-top: 0.5rem;"></div>
-        </div>
+        </header>
 
-        <!-- INNOVATIVE FEATURE 2: PREDICTIVE CASH FLOW -->
-        <div class="card">
-            <h2>Cash-Flow Forecast <span class="badge">AI Feature</span></h2>
-            <p style="font-size: 0.85rem; color: #666;">Predictive analysis for the next 30 days based on recent account trends.</p>
-            
-            <div class="ai-box" style="margin-top: 1rem;">
-                <p><strong>Predicted Outflow:</strong> <span id="outflowVal">$1,250.00</span></p>
-                <p><strong>Forecasted Liquidity:</strong> <span style="color: green;">Healthy</span></p>
-                <small>AI Recommendation: Safe to allocate funds into high-yield savings goals.</small>
-            </div>
-        </div>
+        <main class="container">
 
-        <!-- RECENT TRANSACTIONS TABLE -->
-        <div class="card full-width">
-            <h2>Transaction Ledger & Behavioral History</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Transaction ID</th>
-                            <th>Target Account</th>
-                            <th>Type</th>
-                            <th>Amount</th>
-                            <th>Date/Time</th>
-                            <th>Risk Assessment</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactionTable">
-                        <tr>
-                            <td>TXN-90481</td>
-                            <td>10011223344</td>
-                            <td>Debit</td>
-                            <td>$200.00</td>
-                            <td>2026-09-28 10:15</td>
-                            <td><span class="risk-badge risk-low">Low (12)</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            <!-- 11-DIGIT ACCOUNT TRANSFER FORM -->
+            <section class="card">
+                <h2>Fund Transfer <span class="badge">Strict Validation</span></h2>
+                <form id="transferForm">
+                    <div class="form-group">
+                        <label for="transAccount">Target Account Number (11 Digits)</label>
+                        <input type="text" id="transAccount" maxlength="11" placeholder="e.g., 10098765432" required>
+                        <span class="error-msg" id="transAccError">Target account must be exactly 11 digits.</span>
+                    </div>
 
+                    <div class="form-group">
+                        <label for="transAmount">Amount ($)</label>
+                        <input type="number" id="transAmount" placeholder="Enter amount" min="1" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="transType">Transaction Type</label>
+                        <select id="transType">
+                            <option value="Debit">Debit / Transfer Out</option>
+                            <option value="Credit">Credit / Deposit</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Execute Transaction</button>
+                </form>
+            </section>
+
+            <!-- REAL-TIME AI FRAUD DETECTION ENGINE -->
+            <section class="card">
+                <h2>AI Fraud Detection <span class="badge">Real-Time</span></h2>
+                <p class="subtitle">Monitors behavior, payment velocity, high-value anomalies, and account risk profiles.</p>
+                
+                <div id="fraudAlert" class="ai-box">
+                    <strong>Engine Status:</strong> Monitoring active. Awaiting real-time transaction telemetry...
+                </div>
+
+                <div class="meter-container">
+                    <label>Assessed Risk Score:</label>
+                    <div class="meter-bar">
+                        <div id="riskMeter" class="meter-fill" style="width: 0%; background-color: var(--accent-color);"></div>
+                    </div>
+                    <small id="riskScoreText">Score: 0 / 100 (Safe Level)</small>
+                </div>
+            </section>
+
+            <!-- INNOVATIVE FEATURE 1: FINANCIAL GOAL ENGINE -->
+            <section class="card">
+                <h2>Intelligent Goal Engine <span class="badge">AI Feature</span></h2>
+                <div class="form-group">
+                    <label for="goalName">Target Savings Goal</label>
+                    <input type="text" id="goalName" placeholder="e.g., Reserve Fund">
+                </div>
+                <div class="form-group" style="margin-top: 0.5rem;">
+                    <label for="goalTarget">Target Goal ($)</label>
+                    <input type="number" id="goalTarget" placeholder="10000">
+                </div>
+                <button class="btn-primary" style="margin-top: 0.5rem;" onclick="calculateGoal()">Generate Allocation Strategy</button>
+                
+                <div id="goalResult" class="ai-box" style="display: none; margin-top: 0.75rem;"></div>
+            </section>
+
+            <!-- INNOVATIVE FEATURE 2: PREDICTIVE CASH FLOW -->
+            <section class="card">
+                <h2>Predictive Cash-Flow <span class="badge">AI Feature</span></h2>
+                <p class="subtitle">30-Day Liquidity & Outflow Forecast engine.</p>
+                
+                <div class="ai-box" style="margin-top: 0.75rem;">
+                    <p><strong>Predicted Monthly Outflow:</strong> <span id="outflowVal">$1,420.00</span></p>
+                    <p><strong>Liquidity Forecast:</strong> <span style="color: #2e7d32; font-weight: bold;">Healthy</span></p>
+                    <small>Recommendation: Allocation threshold is optimal for high-yield savings goals.</small>
+                </div>
+            </section>
+
+            <!-- RECENT TRANSACTIONS TABLE -->
+            <section class="card full-width">
+                <div class="table-header">
+                    <h2>Transaction Ledger & Behavioral History</h2>
+                    <button class="btn-secondary" onclick="clearLedger()">Clear Session History</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Txn ID</th>
+                                <th>Target Account</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Timestamp</th>
+                                <th>Fraud Risk Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTable">
+                            <!-- Transactions populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
     </div>
 
     <script src="script.js"></script>
