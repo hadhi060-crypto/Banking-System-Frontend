@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ABC Bank</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1>ABC Bank Dashboard</h1>
+
+<!-- Login -->
+<div class="card">
+  <h2>Login</h2>
+  <input type="text" id="acc" placeholder="11-digit Account Number"><br><br>
+  <input type="password" id="pass" placeholder="Password"><br><br>
+  <button onclick="validateLogin()">Login</button>
+</div>
+
+<!-- Dashboard -->
+<div class="card">
+  <h2>Balance: ₹25,000</h2>
+</div>
+
+<!-- Fraud Alert -->
+<div class="card alert">
+  ⚠ Suspicious Transaction Detected (High Risk)
+</div>
+
+<!-- AI Insight -->
+<div class="card">
+  <h3>AI Insight</h3>
+  <p>You are spending more this month.</p>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
