@@ -1,10 +1,20 @@
 /**
  * ABC Bank - Front-End Logic
- * Clean, Modular, and Persistent State Engine
+ * Complete Account Registration & Role-Based UI Controls
  */
 
-// Global State
-let currentUser = null;
+// Persistent Storage for Accounts & Ledger
+let accounts = JSON.parse(localStorage.getItem('abc_accounts')) || [
+    {
+        accountNumber: '10011223344',
+        pin: '1234',
+        name: 'Demo Customer',
+        email: 'demo@abcbank.com',
+        balance: 2500.00,
+        type: 'Savings'
+    }
+];
+
 let transactions = JSON.parse(localStorage.getItem('abc_transactions')) || [
     {
         id: 'TXN-90481',
@@ -18,81 +28,172 @@ let transactions = JSON.parse(localStorage.getItem('abc_transactions')) || [
     }
 ];
 
-// --- 1. AUTHENTICATION & LOGIN LOGIC ---
-const loginForm = document.getElementById('loginForm');
-const loginRole = document.getElementById('loginRole');
-const loginAccount = document.getElementById('loginAccount');
-const loginPin = document.getElementById('loginPin');
-const loginAlert = document.getElementById('loginAlert');
-const accountLabel = document.getElementById('accountLabel');
+let currentUser = null;
 
-// Toggle label based on selected role
+// --- 1. AUTHENTICATION & REGISTRATION TABS ---
+function switchAuthTab(mode) {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const tabLogin = document.getElementById('tabLogin');
+    const tabRegister = document.getElementById('tabRegister');
+    const loginAlert = document.getElementById('loginAlert');
+    const regAlert = document.getElementById('regAlert');
+
+    loginAlert.style.display = 'none';
+    regAlert.style.display = 'none';
+
+    if (mode === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+    } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        tabLogin.classList.remove('active');
+        tabRegister.classList.add('active');
+    }
+}
+
+// Toggle input formats for Admin vs Customer
 function toggleRoleFields() {
-    if (loginRole.value === 'Admin') {
+    const role = document.getElementById('loginRole').value;
+    const accountLabel = document.getElementById('accountLabel');
+    const loginAccount = document.getElementById('loginAccount');
+
+    if (role === 'Admin') {
         accountLabel.innerText = "Admin Username";
         loginAccount.placeholder = "e.g., AD2026";
     } else {
         accountLabel.innerText = "11-Digit Account Number";
         loginAccount.placeholder = "e.g., 10023456789";
     }
-    loginAlert.style.display = 'none';
 }
 
-// Validate 11-digit account formatting
-function isValid11DigitAccount(account) {
-    return /^\d{11}$/.test(account);
+// Generate valid 11-Digit Account Number starting with 100
+function generate11DigitAccountNumber() {
+    let acc = '100';
+    for (let i = 0; i < 8; i++) {
+        acc += Math.floor(Math.random() * 10);
+    }
+    return acc;
 }
 
-loginForm.addEventListener('submit', (e) => {
+// Registration Form Handler
+document.getElementById('registerForm').addEventListener('submit', (e) => {
     e.preventDefault();
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const type = document.getElementById('regType').value;
+    const deposit = parseFloat(document.getElementById('regDeposit').value);
+    const pin = document.getElementById('regPin').value.trim();
+
+    const regAlert = document.getElementById('regAlert');
+    const regSuccessNotice = document.getElementById('regSuccessNotice');
+
+    regAlert.style.display = 'none';
+
+    if (pin.length !== 4 || isNaN(pin)) {
+        regAlert.innerText = "PIN must be exactly 4 digits.";
+        regAlert.style.display = 'block';
+        return;
+    }
+
+    if (deposit < 50) {
+        regAlert.innerText = "Minimum initial deposit is $50.";
+        regAlert.style.display = 'block';
+        return;
+    }
+
+    // Auto-generate 11-digit account number
+    const newAccNum = generate11DigitAccountNumber();
+
+    const newAccount = {
+        accountNumber: newAccNum,
+        pin: pin,
+        name: name,
+        email: email,
+        balance: deposit,
+        type: type
+    };
+
+    accounts.push(newAccount);
+    localStorage.setItem('abc_accounts', JSON.stringify(accounts));
+
+    // Show Success Notice with 11-digit Account Number
+    regSuccessNotice.innerHTML = `
+        <strong>Account Created Successfully!</strong><br>
+        Your 11-Digit Account Number is: <code>${newAccNum}</code><br>
+        <small>Use this Account Number and your 4-digit PIN to log in.</small>
+    `;
+    regSuccessNotice.style.display = 'block';
+
+    document.getElementById('registerForm').reset();
+});
+
+// Login Handler
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const role = document.getElementById('loginRole').value;
+    const inputAcc = document.getElementById('loginAccount').value.trim();
+    const inputPin = document.getElementById('loginPin').value.trim();
+    const loginAlert = document.getElementById('loginAlert');
+
     loginAlert.style.display = 'none';
 
-    const role = loginRole.value;
-    const account = loginAccount.value.trim();
-    const pin = loginPin.value.trim();
-
-    // Admin Authentication Check
+    // Admin Auth
     if (role === 'Admin') {
-        if (account === 'AD2026' && pin === 'AD2026') {
+        if (inputAcc === 'AD2026' && inputPin === 'AD2026') {
             authenticateUser({ name: 'System Admin', account: 'AD2026', role: 'Admin' });
         } else {
-            showLoginError("Invalid Admin Credentials. (Use ID: AD2026, PIN: AD2026)");
+            loginAlert.innerText = "Invalid Admin Credentials. (ID: AD2026, PIN: AD2026)";
+            loginAlert.style.display = 'block';
         }
         return;
     }
 
-    // Customer Authentication Check
-    if (!isValid11DigitAccount(account)) {
-        showLoginError("Account number must be exactly 11 digits.");
-        return;
+    // Customer Auth
+    const foundAcc = accounts.find(a => a.accountNumber === inputAcc && a.pin === inputPin);
+    if (foundAcc) {
+        authenticateUser({ name: foundAcc.name, account: foundAcc.accountNumber, role: 'Customer' });
+    } else {
+        loginAlert.innerText = "Invalid 11-Digit Account Number or PIN. Please check or create an account.";
+        loginAlert.style.display = 'block';
     }
-
-    if (pin.length !== 4 || isNaN(pin)) {
-        showLoginError("PIN must be a 4-digit number.");
-        return;
-    }
-
-    authenticateUser({ name: `Customer (${account.slice(-4)})`, account: account, role: 'Customer' });
 });
-
-function showLoginError(msg) {
-    loginAlert.innerText = msg;
-    loginAlert.style.display = 'block';
-}
 
 function authenticateUser(userObj) {
     currentUser = userObj;
     sessionStorage.setItem('abc_user', JSON.stringify(currentUser));
     
-    // Switch Views
+    // Toggle screens
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'block';
 
-    // Update Header UI
-    document.getElementById('userDisplayName').innerText = currentUser.account;
+    // Header info
+    document.getElementById('userDisplayName').innerText = currentUser.name;
     document.getElementById('userRoleBadge').innerText = currentUser.role;
 
+    // Role-based UI updates: Remove transaction capability for Admins
+    const transferCard = document.getElementById('transferCard');
+    const adminOverviewCard = document.getElementById('adminOverviewCard');
+
+    if (currentUser.role === 'Admin') {
+        transferCard.style.display = 'none'; // Hide fund transfer for Admins
+        adminOverviewCard.style.display = 'block'; // Show Admin metrics panel
+        updateAdminStats();
+    } else {
+        transferCard.style.display = 'block'; // Show fund transfer for Customers
+        adminOverviewCard.style.display = 'none';
+    }
+
     renderLedger();
+}
+
+function updateAdminStats() {
+    document.getElementById('statTotalAccounts').innerText = accounts.length;
+    const totalVolume = transactions.reduce((sum, t) => sum + t.amount, 0);
+    document.getElementById('statTotalVolume').innerText = `$${totalVolume.toFixed(2)}`;
 }
 
 function logout() {
@@ -100,15 +201,14 @@ function logout() {
     sessionStorage.removeItem('abc_user');
     document.getElementById('appScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
-    loginForm.reset();
+    document.getElementById('loginForm').reset();
 }
 
-// --- 2. AI FRAUD DETECTION ENGINE ---
+// --- 2. REAL-TIME AI FRAUD ENGINE ---
 function analyzeFraudRisk(account, amount) {
     let score = 0;
     let flags = [];
 
-    // Rule 1: High Transaction Value Anomaly
     if (amount > 10000) {
         score += 50;
         flags.push("High-value transaction (> $10,000)");
@@ -117,13 +217,11 @@ function analyzeFraudRisk(account, amount) {
         flags.push("Elevated transaction amount (> $5,000)");
     }
 
-    // Rule 2: Account Number Formatting Anomaly
     if (account.endsWith("0000") || account.startsWith("99")) {
         score += 30;
         flags.push("Suspicious target account routing profile");
     }
 
-    // Rule 3: Velocity Spike Simulation
     if (Math.random() < 0.25) {
         score += 20;
         flags.push("Unusual activity time/frequency spike");
@@ -146,10 +244,14 @@ function analyzeFraudRisk(account, amount) {
     return { score, level, flags, color, badgeClass };
 }
 
-// --- 3. TRANSACTION MANAGEMENT & LEDGER ---
+// --- 3. CUSTOMER TRANSACTION MANAGEMENT ---
 const transferForm = document.getElementById('transferForm');
 const transAccountInput = document.getElementById('transAccount');
 const transAccError = document.getElementById('transAccError');
+
+function isValid11DigitAccount(account) {
+    return /^\d{11}$/.test(account);
+}
 
 transAccountInput.addEventListener('input', () => {
     if (transAccountInput.value.length > 0 && !isValid11DigitAccount(transAccountInput.value)) {
@@ -171,10 +273,8 @@ transferForm.addEventListener('submit', (e) => {
         return;
     }
 
-    // Execute Fraud Analysis
     const analysis = analyzeFraudRisk(targetAcc, amount);
 
-    // Update AI Telemetry Box
     const fraudAlert = document.getElementById('fraudAlert');
     const riskMeter = document.getElementById('riskMeter');
     const riskScoreText = document.getElementById('riskScoreText');
@@ -190,7 +290,6 @@ transferForm.addEventListener('submit', (e) => {
         fraudAlert.innerHTML = `<strong>Status [Safe]:</strong> Transaction fits customer's historical behavioral baseline.`;
     }
 
-    // Append New Record
     const newTxn = {
         id: 'TXN-' + Math.floor(10000 + Math.random() * 90000),
         account: targetAcc,
@@ -203,7 +302,7 @@ transferForm.addEventListener('submit', (e) => {
     };
 
     transactions.unshift(newTxn);
-    saveLedger();
+    localStorage.setItem('abc_transactions', JSON.stringify(transactions));
     renderLedger();
 
     transferForm.reset();
@@ -227,14 +326,10 @@ function renderLedger() {
     });
 }
 
-function saveLedger() {
-    localStorage.setItem('abc_transactions', JSON.stringify(transactions));
-}
-
 function clearLedger() {
     if (confirm("Reset ledger session history?")) {
         transactions = [];
-        saveLedger();
+        localStorage.setItem('abc_transactions', JSON.stringify(transactions));
         renderLedger();
     }
 }
@@ -262,7 +357,7 @@ function calculateGoal() {
     `;
 }
 
-// Restore Session on Page Load
+// Restore Session on Load
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = sessionStorage.getItem('abc_user');
     if (savedUser) {

@@ -24,7 +24,7 @@ body {
     min-height: 100vh;
 }
 
-/* LOGIN SCREEN STYLES */
+/* LOGIN / REGISTER TABS */
 .auth-wrapper {
     display: flex;
     justify-content: center;
@@ -37,20 +37,20 @@ body {
 .auth-card {
     background: var(--card-bg);
     width: 100%;
-    max-width: 420px;
-    padding: 2.5rem 2rem;
+    max-width: 440px;
+    padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
 .auth-header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 .auth-header h2 {
     color: var(--primary-color);
-    font-size: 2rem;
+    font-size: 1.8rem;
 }
 
 .auth-header p {
@@ -58,11 +58,67 @@ body {
     font-size: 0.85rem;
 }
 
+.auth-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    background: #eef2f7;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 0.6rem;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.auth-tab.active {
+    background: white;
+    color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.account-created-box {
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+    padding: 0.85rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
 .auth-footer {
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
     text-align: center;
     font-size: 0.8rem;
     color: var(--text-muted);
+}
+
+/* ADMIN PANEL STATS */
+.admin-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-box {
+    background: #f8f9fa;
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.stat-box h3 {
+    color: var(--primary-color);
+    margin-top: 0.25rem;
+    font-size: 1.4rem;
 }
 
 /* APP HEADER & LAYOUT */
