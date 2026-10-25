@@ -1,17 +1,17 @@
 /**
- * ABC Bank - Front-End Logic
- * Complete Account Registration & Role-Based UI Controls
+ * ABC Bank - Real-Life Core Engine
+ * Manages Rupee Balances, Admin Account Creation, and AI Risk Telemetry
  */
 
-// Persistent Storage for Accounts & Ledger
+// Local Storage for Accounts & Ledger
 let accounts = JSON.parse(localStorage.getItem('abc_accounts')) || [
     {
         accountNumber: '10011223344',
         pin: '1234',
         name: 'Demo Customer',
-        email: 'demo@abcbank.com',
-        balance: 2500.00,
-        type: 'Savings'
+        email: 'customer@abcbank.com',
+        balance: 25000.00,
+        type: 'Savings Account'
     }
 ];
 
@@ -20,7 +20,7 @@ let transactions = JSON.parse(localStorage.getItem('abc_transactions')) || [
         id: 'TXN-90481',
         account: '10011223344',
         type: 'Debit',
-        amount: 200.00,
+        amount: 2500.00,
         timestamp: '2026-09-28 10:15',
         score: 12,
         level: 'Low',
@@ -30,32 +30,12 @@ let transactions = JSON.parse(localStorage.getItem('abc_transactions')) || [
 
 let currentUser = null;
 
-// --- 1. AUTHENTICATION & REGISTRATION TABS ---
-function switchAuthTab(mode) {
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const tabLogin = document.getElementById('tabLogin');
-    const tabRegister = document.getElementById('tabRegister');
-    const loginAlert = document.getElementById('loginAlert');
-    const regAlert = document.getElementById('regAlert');
-
-    loginAlert.style.display = 'none';
-    regAlert.style.display = 'none';
-
-    if (mode === 'login') {
-        loginForm.style.display = 'block';
-        registerForm.style.display = 'none';
-        tabLogin.classList.add('active');
-        tabRegister.classList.remove('active');
-    } else {
-        loginForm.style.display = 'none';
-        registerForm.style.display = 'block';
-        tabLogin.classList.remove('active');
-        tabRegister.classList.add('active');
-    }
+// Validate 11-digit account logic
+function isValid11DigitAccount(account) {
+    return /^\d{11}$/.test(account);
 }
 
-// Toggle input formats for Admin vs Customer
+// Toggle inputs for Admin vs Customer
 function toggleRoleFields() {
     const role = document.getElementById('loginRole').value;
     const accountLabel = document.getElementById('accountLabel');
@@ -70,7 +50,82 @@ function toggleRoleFields() {
     }
 }
 
-// Generate valid 11-Digit Account Number starting with 100
+// Login Handler
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const role = document.getElementById('loginRole').value;
+    const inputAcc = document.getElementById('loginAccount').value.trim();
+    const inputPin = document.getElementById('loginPin').value.trim();
+    const loginAlert = document.getElementById('loginAlert');
+
+    loginAlert.style.display = 'none';
+
+    // Admin Authentication
+    if (role === 'Admin') {
+        if (inputAcc === 'AD2026' && inputPin === 'AD2026') {
+            authenticateUser({ name: 'System Admin', account: 'AD2026', role: 'Admin' });
+        } else {
+            loginAlert.innerText = "Invalid Admin Credentials. (Use ID: AD2026, PIN: AD2026)";
+            loginAlert.style.display = 'block';
+        }
+        return;
+    }
+
+    // Customer Authentication
+    const foundAcc = accounts.find(a => a.accountNumber === inputAcc && a.pin === inputPin);
+    if (foundAcc) {
+        authenticateUser({ ...foundAcc, role: 'Customer' });
+    } else {
+        loginAlert.innerText = "Invalid 11-Digit Account Number or Security PIN.";
+        loginAlert.style.display = 'block';
+    }
+});
+
+function authenticateUser(userObj) {
+    currentUser = userObj;
+    sessionStorage.setItem('abc_user', JSON.stringify(currentUser));
+    
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+
+    document.getElementById('userDisplayName').innerText = currentUser.name;
+    document.getElementById('userRoleBadge').innerText = currentUser.role;
+
+    const transferCard = document.getElementById('transferCard');
+    const adminPanelCard = document.getElementById('adminPanelCard');
+    const customerAccountCard = document.getElementById('customerAccountCard');
+
+    if (currentUser.role === 'Admin') {
+        transferCard.style.display = 'none'; // Admin cannot issue transactions
+        adminPanelCard.style.display = 'block'; // Show Account Creation form
+        customerAccountCard.style.display = 'none';
+        updateAdminStats();
+    } else {
+        transferCard.style.display = 'block';
+        adminPanelCard.style.display = 'none';
+        customerAccountCard.style.display = 'block';
+        updateCustomerUI();
+    }
+
+    renderLedger();
+}
+
+function updateCustomerUI() {
+    const acc = accounts.find(a => a.accountNumber === currentUser.accountNumber) || currentUser;
+    document.getElementById('displayAccNumber').innerText = acc.accountNumber;
+    document.getElementById('displayAccType').innerText = acc.type;
+    document.getElementById('displayAccBalance').innerText = `₹${acc.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+}
+
+function logout() {
+    currentUser = null;
+    sessionStorage.removeItem('abc_user');
+    document.getElementById('appScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginForm').reset();
+}
+
+// --- ADMIN CREATES ACCOUNT FOR USERS ---
 function generate11DigitAccountNumber() {
     let acc = '100';
     for (let i = 0; i < 8; i++) {
@@ -79,33 +134,20 @@ function generate11DigitAccountNumber() {
     return acc;
 }
 
-// Registration Form Handler
-document.getElementById('registerForm').addEventListener('submit', (e) => {
+document.getElementById('createAccountForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('regName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const type = document.getElementById('regType').value;
     const deposit = parseFloat(document.getElementById('regDeposit').value);
     const pin = document.getElementById('regPin').value.trim();
-
-    const regAlert = document.getElementById('regAlert');
-    const regSuccessNotice = document.getElementById('regSuccessNotice');
-
-    regAlert.style.display = 'none';
+    const regNotice = document.getElementById('regSuccessNotice');
 
     if (pin.length !== 4 || isNaN(pin)) {
-        regAlert.innerText = "PIN must be exactly 4 digits.";
-        regAlert.style.display = 'block';
+        alert("PIN must be a 4-digit number.");
         return;
     }
 
-    if (deposit < 50) {
-        regAlert.innerText = "Minimum initial deposit is $50.";
-        regAlert.style.display = 'block';
-        return;
-    }
-
-    // Auto-generate 11-digit account number
     const newAccNum = generate11DigitAccountNumber();
 
     const newAccount = {
@@ -120,101 +162,36 @@ document.getElementById('registerForm').addEventListener('submit', (e) => {
     accounts.push(newAccount);
     localStorage.setItem('abc_accounts', JSON.stringify(accounts));
 
-    // Show Success Notice with 11-digit Account Number
-    regSuccessNotice.innerHTML = `
-        <strong>Account Created Successfully!</strong><br>
-        Your 11-Digit Account Number is: <code>${newAccNum}</code><br>
-        <small>Use this Account Number and your 4-digit PIN to log in.</small>
+    regNotice.innerHTML = `
+        <strong>New Customer Account Registered!</strong><br>
+        • Account Number: <code>${newAccNum}</code><br>
+        • Customer Name: <strong>${name}</strong><br>
+        • Initial Deposit: <strong>₹${deposit.toLocaleString('en-IN')}</strong><br>
+        <small>Account details saved to central database.</small>
     `;
-    regSuccessNotice.style.display = 'block';
+    regNotice.style.display = 'block';
 
-    document.getElementById('registerForm').reset();
+    updateAdminStats();
+    document.getElementById('createAccountForm').reset();
 });
-
-// Login Handler
-document.getElementById('loginForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const role = document.getElementById('loginRole').value;
-    const inputAcc = document.getElementById('loginAccount').value.trim();
-    const inputPin = document.getElementById('loginPin').value.trim();
-    const loginAlert = document.getElementById('loginAlert');
-
-    loginAlert.style.display = 'none';
-
-    // Admin Auth
-    if (role === 'Admin') {
-        if (inputAcc === 'AD2026' && inputPin === 'AD2026') {
-            authenticateUser({ name: 'System Admin', account: 'AD2026', role: 'Admin' });
-        } else {
-            loginAlert.innerText = "Invalid Admin Credentials. (ID: AD2026, PIN: AD2026)";
-            loginAlert.style.display = 'block';
-        }
-        return;
-    }
-
-    // Customer Auth
-    const foundAcc = accounts.find(a => a.accountNumber === inputAcc && a.pin === inputPin);
-    if (foundAcc) {
-        authenticateUser({ name: foundAcc.name, account: foundAcc.accountNumber, role: 'Customer' });
-    } else {
-        loginAlert.innerText = "Invalid 11-Digit Account Number or PIN. Please check or create an account.";
-        loginAlert.style.display = 'block';
-    }
-});
-
-function authenticateUser(userObj) {
-    currentUser = userObj;
-    sessionStorage.setItem('abc_user', JSON.stringify(currentUser));
-    
-    // Toggle screens
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'block';
-
-    // Header info
-    document.getElementById('userDisplayName').innerText = currentUser.name;
-    document.getElementById('userRoleBadge').innerText = currentUser.role;
-
-    // Role-based UI updates: Remove transaction capability for Admins
-    const transferCard = document.getElementById('transferCard');
-    const adminOverviewCard = document.getElementById('adminOverviewCard');
-
-    if (currentUser.role === 'Admin') {
-        transferCard.style.display = 'none'; // Hide fund transfer for Admins
-        adminOverviewCard.style.display = 'block'; // Show Admin metrics panel
-        updateAdminStats();
-    } else {
-        transferCard.style.display = 'block'; // Show fund transfer for Customers
-        adminOverviewCard.style.display = 'none';
-    }
-
-    renderLedger();
-}
 
 function updateAdminStats() {
     document.getElementById('statTotalAccounts').innerText = accounts.length;
     const totalVolume = transactions.reduce((sum, t) => sum + t.amount, 0);
-    document.getElementById('statTotalVolume').innerText = `$${totalVolume.toFixed(2)}`;
+    document.getElementById('statTotalVolume').innerText = `₹${totalVolume.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 }
 
-function logout() {
-    currentUser = null;
-    sessionStorage.removeItem('abc_user');
-    document.getElementById('appScreen').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('loginForm').reset();
-}
-
-// --- 2. REAL-TIME AI FRAUD ENGINE ---
+// --- AI FRAUD ENGINE ---
 function analyzeFraudRisk(account, amount) {
     let score = 0;
     let flags = [];
 
-    if (amount > 10000) {
+    if (amount > 500000) {
         score += 50;
-        flags.push("High-value transaction (> $10,000)");
-    } else if (amount > 5000) {
+        flags.push("High-value transaction anomaly (> ₹5,00,000)");
+    } else if (amount > 100000) {
         score += 25;
-        flags.push("Elevated transaction amount (> $5,000)");
+        flags.push("Elevated transaction amount (> ₹1,00,000)");
     }
 
     if (account.endsWith("0000") || account.startsWith("99")) {
@@ -244,14 +221,10 @@ function analyzeFraudRisk(account, amount) {
     return { score, level, flags, color, badgeClass };
 }
 
-// --- 3. CUSTOMER TRANSACTION MANAGEMENT ---
+// --- CUSTOMER TRANSFER MANAGEMENT ---
 const transferForm = document.getElementById('transferForm');
 const transAccountInput = document.getElementById('transAccount');
 const transAccError = document.getElementById('transAccError');
-
-function isValid11DigitAccount(account) {
-    return /^\d{11}$/.test(account);
-}
 
 transAccountInput.addEventListener('input', () => {
     if (transAccountInput.value.length > 0 && !isValid11DigitAccount(transAccountInput.value)) {
@@ -273,6 +246,14 @@ transferForm.addEventListener('submit', (e) => {
         return;
     }
 
+    // Check balance for debit transactions
+    const customerAcc = accounts.find(a => a.accountNumber === currentUser.accountNumber);
+    if (type === 'Debit' && customerAcc && customerAcc.balance < amount) {
+        alert("Insufficient account balance to complete transfer.");
+        return;
+    }
+
+    // Calculate Fraud Assessment
     const analysis = analyzeFraudRisk(targetAcc, amount);
 
     const fraudAlert = document.getElementById('fraudAlert');
@@ -284,12 +265,24 @@ transferForm.addEventListener('submit', (e) => {
     riskScoreText.innerText = `Score: ${analysis.score} / 100 (${analysis.level} Risk)`;
 
     if (analysis.flags.length > 0) {
-        fraudAlert.innerHTML = `<strong>Status [${analysis.level} Risk]:</strong><br>` + 
+        fraudAlert.innerHTML = `<strong>Status [${analysis.level} Risk Alert]:</strong><br>` + 
             analysis.flags.map(f => `• ${f}`).join('<br>');
     } else {
         fraudAlert.innerHTML = `<strong>Status [Safe]:</strong> Transaction fits customer's historical behavioral baseline.`;
     }
 
+    // Update Balance
+    if (customerAcc) {
+        if (type === 'Debit') {
+            customerAcc.balance -= amount;
+        } else {
+            customerAcc.balance += amount;
+        }
+        localStorage.setItem('abc_accounts', JSON.stringify(accounts));
+        updateCustomerUI();
+    }
+
+    // Append to Transaction History
     const newTxn = {
         id: 'TXN-' + Math.floor(10000 + Math.random() * 90000),
         account: targetAcc,
@@ -318,7 +311,7 @@ function renderLedger() {
             <td>${txn.id}</td>
             <td>${txn.account}</td>
             <td>${txn.type}</td>
-            <td>$${txn.amount.toFixed(2)}</td>
+            <td>₹${txn.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
             <td>${txn.timestamp}</td>
             <td><span class="risk-badge ${txn.badgeClass}">${txn.level} (${txn.score})</span></td>
         `;
@@ -327,16 +320,16 @@ function renderLedger() {
 }
 
 function clearLedger() {
-    if (confirm("Reset ledger session history?")) {
+    if (confirm("Clear local ledger logs?")) {
         transactions = [];
         localStorage.setItem('abc_transactions', JSON.stringify(transactions));
         renderLedger();
     }
 }
 
-// --- 4. INTELLIGENT GOAL ENGINE ---
+// --- FINANCIAL GOAL PLANNER ---
 function calculateGoal() {
-    const name = document.getElementById('goalName').value || 'Target Savings';
+    const name = document.getElementById('goalName').value || 'Emergency Reserve';
     const target = parseFloat(document.getElementById('goalTarget').value);
     const resultBox = document.getElementById('goalResult');
 
@@ -350,14 +343,14 @@ function calculateGoal() {
 
     resultBox.style.display = 'block';
     resultBox.innerHTML = `
-        <strong>AI Plan for "${name}":</strong><br>
-        To reach $${target.toLocaleString()} in 12 months:<br>
-        • Deposit <strong>$${monthly}/month</strong> or <strong>$${weekly}/week</strong>.<br>
-        <em>Smart auto-transfer strategy enabled.</em>
+        <strong>AI Deposit Strategy for "${name}":</strong><br>
+        To accumulate ₹${target.toLocaleString('en-IN')} over 12 months:<br>
+        • Deposit <strong>₹${parseFloat(monthly).toLocaleString('en-IN')}/month</strong> or <strong>₹${parseFloat(weekly).toLocaleString('en-IN')}/week</strong>.<br>
+        <em>Automated mandate strategy ready.</em>
     `;
 }
 
-// Restore Session on Load
+// Restore active session
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = sessionStorage.getItem('abc_user');
     if (savedUser) {

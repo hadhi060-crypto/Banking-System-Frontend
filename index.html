@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ABC Bank - Smart AI Core</title>
+    <title>ABC Bank - Core Banking & AI Portal</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,19 +13,13 @@
         <div class="auth-card">
             <div class="auth-header">
                 <h2>ABC Bank</h2>
-                <p>Digital Core & Fraud Prevention Portal</p>
-            </div>
-
-            <!-- TOGGLE LOGIN / REGISTER -->
-            <div class="auth-tabs">
-                <button type="button" id="tabLogin" class="auth-tab active" onclick="switchAuthTab('login')">Log In</button>
-                <button type="button" id="tabRegister" class="auth-tab" onclick="switchAuthTab('register')">Create Account</button>
+                <p>Core Banking & Security Portal</p>
             </div>
 
             <!-- LOGIN FORM -->
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="loginRole">Select Access Role</label>
+                    <label for="loginRole">Access Role</label>
                     <select id="loginRole" onchange="toggleRoleFields()">
                         <option value="Customer">Customer Portal</option>
                         <option value="Admin">System Administrator</option>
@@ -38,49 +32,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="loginPin">4-Digit PIN / Password</label>
+                    <label for="loginPin">4-Digit Security PIN</label>
                     <input type="password" id="loginPin" placeholder="••••" required>
                 </div>
 
                 <div id="loginAlert" class="alert alert-danger" style="display:none;"></div>
 
-                <button type="submit" class="btn-primary">Authenticate & Log In</button>
-            </form>
-
-            <!-- CREATE ACCOUNT FORM -->
-            <form id="registerForm" style="display: none;">
-                <div class="form-group">
-                    <label for="regName">Full Legal Name</label>
-                    <input type="text" id="regName" placeholder="e.g. John Doe" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="regEmail">Email Address</label>
-                    <input type="email" id="regEmail" placeholder="john@example.com" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="regType">Account Type</label>
-                    <select id="regType">
-                        <option value="Savings">Savings Account</option>
-                        <option value="Checking">Checking Account</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="regDeposit">Initial Deposit ($)</label>
-                    <input type="number" id="regDeposit" min="50" placeholder="Minimum $50" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="regPin">Set 4-Digit Security PIN</label>
-                    <input type="password" id="regPin" maxlength="4" placeholder="••••" required>
-                </div>
-
-                <div id="regSuccessNotice" class="account-created-box" style="display: none;"></div>
-                <div id="regAlert" class="alert alert-danger" style="display:none;"></div>
-
-                <button type="submit" class="btn-primary">Open New Account</button>
+                <button type="submit" class="btn-primary">Authenticate & Sign In</button>
             </form>
 
             <div class="auth-footer">
@@ -94,30 +52,45 @@
         <header>
             <div class="brand">
                 <h1>ABC Bank</h1>
-                <small>Smart AI Core System</small>
+                <small>Digital Core Banking Portal</small>
             </div>
             <div class="user-info">
                 <p><strong id="userDisplayName">User</strong> (<span id="userRoleBadge">Customer</span>)</p>
-                <p><small>Branch: <strong>Main Branch (BR-101)</strong></small></p>
+                <p><small>Branch: <strong>Main Branch (BR-101)</strong> | IFSC: <strong>ABCB000101</strong></small></p>
                 <button class="btn-logout" onclick="logout()">Log Out</button>
             </div>
         </header>
 
         <main class="container">
 
-            <!-- CUSTOMER-ONLY: 11-DIGIT TRANSFER FORM -->
+            <!-- CUSTOMER REAL-LIFE ACCOUNT METRICS CARD -->
+            <section id="customerAccountCard" class="card full-width" style="display: none;">
+                <div class="account-summary-bar">
+                    <div>
+                        <small>Account Number (11-Digits)</small>
+                        <h3 id="displayAccNumber">10000000000</h3>
+                        <span id="displayAccType" class="badge">Savings Account</span>
+                    </div>
+                    <div class="balance-box">
+                        <small>Available Balance</small>
+                        <h2 id="displayAccBalance">₹0.00</h2>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CUSTOMER-ONLY: 11-DIGIT FUND TRANSFER FORM -->
             <section id="transferCard" class="card">
-                <h2>Fund Transfer <span class="badge">Strict Validation</span></h2>
+                <h2>NEFT / RTGS Fund Transfer <span class="badge">11-Digit Enforced</span></h2>
                 <form id="transferForm">
                     <div class="form-group">
-                        <label for="transAccount">Target Account Number (11 Digits)</label>
+                        <label for="transAccount">Beneficiary 11-Digit Account Number</label>
                         <input type="text" id="transAccount" maxlength="11" placeholder="e.g., 10098765432" required>
-                        <span class="error-msg" id="transAccError">Target account must be exactly 11 digits.</span>
+                        <span class="error-msg" id="transAccError">Account must be exactly 11 digits.</span>
                     </div>
 
                     <div class="form-group">
-                        <label for="transAmount">Amount ($)</label>
-                        <input type="number" id="transAmount" placeholder="Enter amount" min="1" step="0.01" required>
+                        <label for="transAmount">Amount (₹)</label>
+                        <input type="number" id="transAmount" placeholder="Enter amount in ₹" min="1" step="1" required>
                     </div>
 
                     <div class="form-group">
@@ -128,40 +101,85 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn-primary">Execute Transaction</button>
+                    <button type="submit" class="btn-primary">Initiate Transfer</button>
                 </form>
             </section>
 
-            <!-- ADMIN-ONLY: SYSTEM AUDIT & METRICS OVERVIEW -->
-            <section id="adminOverviewCard" class="card" style="display: none;">
-                <h2>Admin Control Panel <span class="badge">Read Only</span></h2>
-                <p class="subtitle">System oversight, account registry, and risk telemetry.</p>
-                <div class="admin-stats">
-                    <div class="stat-box">
-                        <small>Registered Accounts</small>
-                        <h3 id="statTotalAccounts">0</h3>
+            <!-- ADMIN-ONLY: ACCOUNT CREATION & SYSTEM MANAGEMENT PANEL -->
+            <section id="adminPanelCard" class="card full-width" style="display: none;">
+                <h2>System Administrator Portal <span class="badge">Admin Control</span></h2>
+                <p class="subtitle">Register new bank accounts and inspect system-wide ledger volumes.</p>
+
+                <div class="admin-grid">
+                    <!-- ACCOUNT CREATION FORM -->
+                    <div class="admin-section">
+                        <h3>Create Customer Account</h3>
+                        <form id="createAccountForm">
+                            <div class="form-group">
+                                <label for="regName">Full Legal Name</label>
+                                <input type="text" id="regName" placeholder="e.g. Ramesh Kumar" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regEmail">Email Address</label>
+                                <input type="email" id="regEmail" placeholder="ramesh@example.com" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regType">Account Type</label>
+                                <select id="regType">
+                                    <option value="Savings">Savings Account</option>
+                                    <option value="Current">Current Account</option>
+                                    <option value="Fixed Deposit">Fixed Deposit (FD)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regDeposit">Initial Opening Balance (₹)</label>
+                                <input type="number" id="regDeposit" min="500" placeholder="Minimum ₹500" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regPin">Set 4-Digit Security PIN</label>
+                                <input type="password" id="regPin" maxlength="4" placeholder="••••" required>
+                            </div>
+
+                            <button type="submit" class="btn-primary">Generate & Create Account</button>
+                        </form>
+                        <div id="regSuccessNotice" class="account-created-box" style="display: none; margin-top: 1rem;"></div>
                     </div>
-                    <div class="stat-box">
-                        <small>Total Ledger Volume</small>
-                        <h3 id="statTotalVolume">$0.00</h3>
+
+                    <!-- ADMIN ANALYTICS OVERVIEW -->
+                    <div class="admin-section">
+                        <h3>Bank Metrics & System Health</h3>
+                        <div class="admin-stats">
+                            <div class="stat-box">
+                                <small>Total Registered Accounts</small>
+                                <h3 id="statTotalAccounts">0</h3>
+                            </div>
+                            <div class="stat-box">
+                                <small>System Ledger Volume</small>
+                                <h3 id="statTotalVolume">₹0.00</h3>
+                            </div>
+                        </div>
+                        <div class="ai-box" style="margin-top: 1.25rem;">
+                            <strong>Administrator Security Scope:</strong> Direct fund transfers are restricted for admin accounts. System administrators oversee account creation, risk scores, and ledger operations[cite: 1].
+                        </div>
                     </div>
-                </div>
-                <div class="ai-box" style="margin-top: 1rem;">
-                    <strong>Security Notice:</strong> Administrators monitor transactions and flag fraud risks. Direct fund transfers are restricted for administrative roles.
                 </div>
             </section>
 
             <!-- REAL-TIME AI FRAUD DETECTION ENGINE -->
             <section class="card">
-                <h2>AI Fraud Detection <span class="badge">Real-Time</span></h2>
-                <p class="subtitle">Monitors behavior, payment velocity, high-value anomalies, and account risk profiles.</p>
+                <h2>AI Risk Analytics Engine <span class="badge">Real-Time</span></h2>
+                <p class="subtitle">Monitors behavior, payment velocity, high-value anomalies, and account risk profiles[cite: 1].</p>
                 
                 <div id="fraudAlert" class="ai-box">
-                    <strong>Engine Status:</strong> Monitoring active. Awaiting real-time transaction telemetry...
+                    <strong>Engine Status:</strong> Operational. Monitoring transaction telemetry...
                 </div>
 
                 <div class="meter-container">
-                    <label>Assessed Risk Score:</label>
+                    <label>Calculated Transaction Risk Score:</label>
                     <div class="meter-bar">
                         <div id="riskMeter" class="meter-fill" style="width: 0%; background-color: var(--accent-color);"></div>
                     </div>
@@ -171,28 +189,28 @@
 
             <!-- INNOVATIVE FEATURE 1: FINANCIAL GOAL ENGINE -->
             <section class="card">
-                <h2>Intelligent Goal Engine <span class="badge">AI Feature</span></h2>
+                <h2>Smart Goal Planner <span class="badge">AI Feature</span></h2>
                 <div class="form-group">
-                    <label for="goalName">Target Savings Goal</label>
-                    <input type="text" id="goalName" placeholder="e.g., Reserve Fund">
+                    <label for="goalName">Savings Goal Target</label>
+                    <input type="text" id="goalName" placeholder="e.g., Emergency Reserve">
                 </div>
                 <div class="form-group" style="margin-top: 0.5rem;">
-                    <label for="goalTarget">Target Goal ($)</label>
-                    <input type="number" id="goalTarget" placeholder="10000">
+                    <label for="goalTarget">Target Goal Amount (₹)</label>
+                    <input type="number" id="goalTarget" placeholder="100000">
                 </div>
-                <button class="btn-primary" style="margin-top: 0.5rem;" onclick="calculateGoal()">Generate Allocation Strategy</button>
+                <button class="btn-primary" style="margin-top: 0.5rem;" onclick="calculateGoal()">Generate Deposit Strategy</button>
                 
                 <div id="goalResult" class="ai-box" style="display: none; margin-top: 0.75rem;"></div>
             </section>
 
             <!-- INNOVATIVE FEATURE 2: PREDICTIVE CASH FLOW -->
             <section class="card">
-                <h2>Predictive Cash-Flow <span class="badge">AI Feature</span></h2>
-                <p class="subtitle">30-Day Liquidity & Outflow Forecast engine.</p>
+                <h2>Predictive Liquidity Engine <span class="badge">AI Feature</span></h2>
+                <p class="subtitle">30-Day Cash-Flow Forecast engine.</p>
                 
                 <div class="ai-box" style="margin-top: 0.75rem;">
-                    <p><strong>Predicted Monthly Outflow:</strong> <span id="outflowVal">$1,420.00</span></p>
-                    <p><strong>Liquidity Forecast:</strong> <span style="color: #2e7d32; font-weight: bold;">Healthy</span></p>
+                    <p><strong>Predicted Monthly Outflow:</strong> <span id="outflowVal">₹15,420.00</span></p>
+                    <p><strong>Liquidity Status:</strong> <span style="color: #2e7d32; font-weight: bold;">Optimal</span></p>
                     <small>Recommendation: Allocation threshold is optimal for high-yield savings goals.</small>
                 </div>
             </section>
@@ -200,17 +218,17 @@
             <!-- RECENT TRANSACTIONS TABLE -->
             <section class="card full-width">
                 <div class="table-header">
-                    <h2>Transaction Ledger & Behavioral History</h2>
-                    <button class="btn-secondary" onclick="clearLedger()">Clear Session History</button>
+                    <h2>Core Banking Ledger & Transaction History</h2>
+                    <button class="btn-secondary" onclick="clearLedger()">Clear Ledger Logs</button>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Txn ID</th>
+                                <th>Txn Ref ID</th>
                                 <th>Target Account</th>
                                 <th>Type</th>
-                                <th>Amount</th>
+                                <th>Amount (₹)</th>
                                 <th>Timestamp</th>
                                 <th>Fraud Risk Score</th>
                             </tr>
